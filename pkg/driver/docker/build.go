@@ -35,6 +35,7 @@ func (d *dockerDriver) BuildDevContainer(
 ) (*config.BuildInfo, error) {
 	// check if image build is necessary
 	imageName := GetImageName(localWorkspaceFolder, prebuildHash)
+	d.Log.Info("Building image " + imageName)
 	if options.Repository == "" && !options.ForceBuild {
 		imageDetails, err := d.Docker.InspectImage(ctx, imageName, false)
 		if err == nil && imageDetails != nil {
@@ -167,7 +168,9 @@ func CreateBuildOptions(
 	if buildOptions.BuildArgs == nil {
 		buildOptions.BuildArgs = map[string]string{}
 	}
-	buildOptions.BuildArgs["BUILDKIT_INLINE_CACHE"] = "1"
+	// todo remove to use registry cache
+	// buildOptions.BuildArgs["BUILDKIT_INLINE_CACHE"] = "1"
+	buildOptions.CacheFrom = []string{"type=registry,ref=gcr.io/pascal-project-387807/my-dev-env"}
 	return buildOptions, nil
 }
 
@@ -300,9 +303,13 @@ func (d *dockerDriver) buildxBuild(ctx context.Context, writer io.Writer, platfo
 	}
 
 	// cache
+	// todo add here prebuild registry
 	for _, cacheFrom := range options.CacheFrom {
 		args = append(args, "--cache-from", cacheFrom)
 	}
+
+	args = append(args, "--cache-to", "type=registry,ref=gcr.io/pascal-project-387807/my-dev-env,mode=max")
+	// args = append(args, "--push")
 
 	// add additional build cli options
 	args = append(args, options.CliOpts...)

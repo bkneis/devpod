@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/loft-sh/devpod/pkg/devcontainer/config"
-	"github.com/loft-sh/devpod/pkg/driver"
 	"github.com/loft-sh/devpod/pkg/driver/docker"
 	"github.com/loft-sh/devpod/pkg/image"
 	"github.com/loft-sh/devpod/pkg/provider"
@@ -15,10 +14,10 @@ import (
 )
 
 func (r *runner) Build(ctx context.Context, options provider.BuildOptions) (string, error) {
-	dockerDriver, ok := r.Driver.(driver.DockerDriver)
-	if !ok {
-		return "", fmt.Errorf("building only supported with docker driver")
-	}
+	// dockerDriver, ok := r.Driver.(driver.DockerDriver)
+	// if !ok {
+	// 	return "", fmt.Errorf("building only supported with docker driver")
+	// }
 
 	substitutedConfig, substitutionContext, err := r.prepare(options.CLIOptions)
 	if err != nil {
@@ -26,6 +25,7 @@ func (r *runner) Build(ctx context.Context, options provider.BuildOptions) (stri
 	}
 
 	prebuildRepo := getPrebuildRepository(substitutedConfig)
+	r.Log.Debug("Building prebuild image ", prebuildRepo)
 
 	if !options.SkipPush && options.Repository == "" && prebuildRepo == "" {
 		return "", fmt.Errorf("repository needs to be specified")
@@ -42,6 +42,7 @@ func (r *runner) Build(ctx context.Context, options provider.BuildOptions) (stri
 	if err != nil {
 		return "", errors.Wrap(err, "build image")
 	}
+	r.Log.Debugf("Built image %s:%s", buildInfo.ImageName, buildInfo.PrebuildHash)
 
 	// have a fallback value for PrebuildHash
 	// in some cases it may be empty, and this would lead to
@@ -80,10 +81,10 @@ func (r *runner) Build(ctx context.Context, options provider.BuildOptions) (stri
 	}
 
 	// push the image to the registry
-	err = dockerDriver.PushDevContainer(ctx, prebuildImage)
-	if err != nil {
-		return "", errors.Wrap(err, "push image")
-	}
+	// err = dockerDriver.PushDevContainer(ctx, prebuildImage)
+	// if err != nil {
+	// 	return "", errors.Wrap(err, "push image")
+	// }
 
 	return prebuildImage, nil
 }

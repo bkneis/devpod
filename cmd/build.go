@@ -29,6 +29,7 @@ type BuildCmd struct {
 
 	SkipDelete bool
 	Machine    string
+	Tag        string
 }
 
 // NewBuildCmd creates a new command
@@ -118,6 +119,7 @@ func NewBuildCmd(flags *flags.GlobalFlags) *cobra.Command {
 	buildCmd.Flags().StringVar(&cmd.GitBranch, "git-branch", "", "The git branch to use")
 	buildCmd.Flags().StringVar(&cmd.GitCommit, "git-commit", "", "The git commit SHA to use")
 	buildCmd.Flags().Var(&cmd.GitCloneStrategy, "git-clone-strategy", "The git clone strategy DevPod uses to checkout git based workspaces. Can be full (default), blobless, treeless or shallow")
+	buildCmd.Flags().StringVar(&cmd.Tag, "tag", "", "Additional tag for the container, such as latest")
 
 	// TESTING
 	buildCmd.Flags().BoolVar(&cmd.ForceBuild, "force-build", false, "TESTING ONLY")
@@ -165,6 +167,9 @@ func (cmd *BuildCmd) buildAgentClient(ctx context.Context, workspaceClient clien
 	command := fmt.Sprintf("'%s' agent workspace build --workspace-info '%s'", workspaceClient.AgentPath(), workspaceInfo)
 	if log.GetLevel() == logrus.DebugLevel {
 		command += " --debug"
+	}
+	if cmd.Tag != "" {
+		command += " --tag " + cmd.Tag
 	}
 
 	// create pipes

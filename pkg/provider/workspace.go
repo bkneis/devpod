@@ -206,6 +206,7 @@ type BuildOptions struct {
 
 	Platform string
 	NoBuild  bool
+	Tag      string
 }
 
 func (w WorkspaceSource) String() string {

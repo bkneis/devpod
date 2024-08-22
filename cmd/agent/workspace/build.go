@@ -17,6 +17,7 @@ type BuildCmd struct {
 	*flags.GlobalFlags
 
 	WorkspaceInfo string
+	Tag           string
 }
 
 // NewBuildCmd creates a new command
@@ -33,6 +34,7 @@ func NewBuildCmd(flags *flags.GlobalFlags) *cobra.Command {
 		},
 	}
 	buildCmd.Flags().StringVar(&cmd.WorkspaceInfo, "workspace-info", "", "The workspace info")
+	buildCmd.Flags().StringVar(&cmd.Tag, "tag", "", "Additional tag for the container, such as latest")
 	_ = buildCmd.MarkFlagRequired("workspace-info")
 	return buildCmd
 }
@@ -82,8 +84,8 @@ func (cmd *BuildCmd) Run(ctx context.Context) error {
 		// build the image
 		imageName, err := runner.Build(ctx, provider2.BuildOptions{
 			CLIOptions: workspaceInfo.CLIOptions,
-
-			Platform: platform,
+			Platform:   platform,
+			Tag:        cmd.Tag,
 		})
 		if err != nil {
 			logger.Errorf("Error building image: %v", err)

@@ -127,6 +127,7 @@ func initWorkspace(ctx context.Context, cancel context.CancelFunc, workspaceInfo
 	errChan := make(chan error, 1)
 	go func() {
 		if !workspaceInfo.Agent.IsDockerDriver() || workspaceInfo.Agent.Docker.Install == "false" {
+			logger.Debug("Skipping Docker installation, docker driver=%t docker install=%s", workspaceInfo.Agent.IsDockerDriver(), workspaceInfo.Agent.Docker.Install)
 			errChan <- nil
 		} else {
 			errChan <- InstallDocker(logger)
@@ -548,6 +549,7 @@ func InstallDocker(log log.Logger) error {
 		}
 	}
 
+	log.Debug("Docker is already installed")
 	return nil
 }
 

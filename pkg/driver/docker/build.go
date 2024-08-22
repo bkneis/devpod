@@ -168,8 +168,7 @@ func CreateBuildOptions(
 	if buildOptions.BuildArgs == nil {
 		buildOptions.BuildArgs = map[string]string{}
 	}
-	// todo remove to use registry cache
-	// buildOptions.BuildArgs["BUILDKIT_INLINE_CACHE"] = "1"
+	// Add remote cache
 	buildOptions.CacheFrom = []string{"type=registry,ref=gcr.io/pascal-project-387807/my-dev-env"}
 	return buildOptions, nil
 }
@@ -303,12 +302,10 @@ func (d *dockerDriver) buildxBuild(ctx context.Context, writer io.Writer, platfo
 	}
 
 	// cache
-	// todo add here prebuild registry
 	for _, cacheFrom := range options.CacheFrom {
 		args = append(args, "--cache-from", cacheFrom)
 	}
-
-	args = append(args, "--cache-to", "type=registry,ref=gcr.io/pascal-project-387807/my-dev-env,mode=max")
+	args = append(args, "--cache-to", "type=registry,ref=gcr.io/pascal-project-387807/my-dev-env,mode=max,image-manifest=true")
 	// args = append(args, "--push")
 
 	// add additional build cli options

@@ -12,7 +12,6 @@ import (
 	"github.com/loft-sh/devpod/pkg/docker"
 	"github.com/loft-sh/log"
 	buildkit "github.com/moby/buildkit/client"
-	mClient "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/auth/authprovider"
 	"github.com/pkg/errors"
@@ -25,14 +24,23 @@ func Build(ctx context.Context, client *buildkit.Client, writer io.Writer, platf
 	}
 
 	// cache from
-	cacheFrom, err := ParseCacheEntry(options.CacheFrom)
-	if err != nil {
-		return err
-	}
-	cacheFrom = append(cacheFrom, mClient.CacheOptionsEntry{
+	// cacheFrom, err := ParseCacheEntry(options.CacheFrom)
+	// if err != nil {
+	// 	return err
+	// }
+	cacheFrom := []buildkit.CacheOptionsEntry{}
+	cacheFrom = append(cacheFrom, buildkit.CacheOptionsEntry{
 		Type:  "registry",
 		Attrs: map[string]string{"ref": "gcr.io/pascal-project-387807/my-dev-env"},
 	})
+	log.Debugf("Using cache from: %v", cacheFrom)
+
+	cacheTo := []buildkit.CacheOptionsEntry{}
+	cacheTo = append(cacheTo, buildkit.CacheOptionsEntry{
+		Type:  "registry",
+		Attrs: map[string]string{"ref": "gcr.io/pascal-project-387807/my-dev-env", "mode": "max", "image-manifest": "true"},
+	})
+	log.Debugf("Using cache to with prebuild registry: %v", cacheTo)
 
 	// is context stream?
 	attachable := []session.Attachable{}
@@ -47,6 +55,7 @@ func Build(ctx context.Context, client *buildkit.Client, writer io.Writer, platf
 		},
 		Session:      attachable,
 		CacheImports: cacheFrom,
+		CacheExports: cacheTo,
 	}
 
 	// set options target

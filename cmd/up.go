@@ -656,6 +656,58 @@ func startFleet(ctx context.Context, client client2.BaseWorkspaceClient, logger 
 	return nil
 }
 
+// setupBackhaul sets up a long running command in the container to keep the SSH agent alive
+func setupBackhaul(
+	client client2.BaseWorkspaceClient,
+	log log.Logger,
+) error {
+
+	execPath, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
+	remoteUser, err := devssh.GetUser(client.WorkspaceConfig().ID, client.WorkspaceConfig().SSHConfigPath)
+	if err != nil {
+		remoteUser = "root"
+	}
+
+	dotCmd := exec.Command(
+		execPath,
+		"ssh",
+		"--agent-forwarding=true",
+		"--start-services=false",
+		"--user",
+		remoteUser,
+		"--context",
+		client.Context(),
+		client.Workspace(),
+		"--log-output=raw",
+		"--command",
+		"while true; do sleep 6000000; done", // sleep infinity is not available on all systems
+	)
+
+	if log.GetLevel() == logrus.DebugLevel {
+		dotCmd.Args = append(dotCmd.Args, "--debug")
+	}
+
+	log.Debugf("Running command: %v", dotCmd.Args)
+
+	writer := log.Writer(logrus.InfoLevel, false)
+
+	dotCmd.Stdout = writer
+	dotCmd.Stderr = writer
+
+	err = dotCmd.Start()
+	if err != nil {
+		return err
+	}
+
+	log.Infof("Done setting up dotfiles into the devcontainer")
+
+	return nil
+}
+
 func startVSCodeInBrowser(
 	forwardGpg bool,
 	ctx context.Context,
@@ -756,6 +808,14 @@ func startBrowserTunnel(
 	gitUsername, gitToken string,
 	logger log.Logger,
 ) error {
+	// Since openvscode and jupyter notebook are not connecting via SSH (since they are in the browser), connect a long lived "backhaul" SSH connection
+	// to open the SSH agent listener socket to pass on credentials
+	go func() {
+		logger.Debug("Setting up backhaul SSH connection")
+		if err := setupBackhaul(client, logger); err != nil {
+			logger.Error("Failed to setup backhaul SSH connection: ", err)
+		}
+	}()
 	err := tunnel.NewTunnel(
 		ctx,
 		func(ctx context.Context, stdin io.Reader, stdout io.Writer) error {

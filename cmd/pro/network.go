@@ -2,11 +2,9 @@ package pro
 
 import (
 	"context"
-	"fmt"
+	"os"
 
 	"github.com/loft-sh/devpod/cmd/pro/flags"
-	"github.com/loft-sh/devpod/pkg/config"
-	"github.com/loft-sh/devpod/pkg/platform"
 	"github.com/loft-sh/log"
 	"github.com/spf13/cobra"
 	"tailscale.com/tsnet"
@@ -42,25 +40,26 @@ func NewNetworkCmd(globalFlags *flags.GlobalFlags) *cobra.Command {
 }
 
 func (cmd *NetworkCmd) Run(ctx context.Context) error {
-	devPodConfig, err := config.LoadConfig(cmd.Context, cmd.Provider)
-	if err != nil {
-		return err
-	}
+	// devPodConfig, err := config.LoadConfig(cmd.Context, cmd.Provider)
+	// if err != nil {
+	// 	return err
+	// }
 
-	_, err = platform.ProviderFromHost(ctx, devPodConfig, cmd.Host, cmd.Log)
-	if err != nil {
-		return fmt.Errorf("load provider: %w", err)
-	}
+	// _, err = platform.ProviderFromHost(ctx, devPodConfig, cmd.Host, cmd.Log)
+	// if err != nil {
+	// 	return fmt.Errorf("load provider: %w", err)
+	// }
 
 	s := &tsnet.Server{
 		Hostname:     cmd.Host,
 		RunWebClient: true,
-		ControlURL:   "http://loft.devpod-pro.svc.cluster.local/coordinator",
+		ControlURL:   "http://loft.devpod-pro.svc.cluster.local/coordinator/",
+		AuthKey:      os.Getenv("TS_AUTHKEY"),
 	}
 
 	defer s.Close()
 
-	err = s.Start()
+	err := s.Start()
 	if err != nil {
 		cmd.Log.Fatal(err)
 	}

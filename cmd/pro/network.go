@@ -60,12 +60,10 @@ func (cmd *NetworkCmd) Run(ctx context.Context) error {
 
 	defer s.Close()
 
-	ln, err := s.Listen("tcp", ":8022")
+	err = s.Start()
 	if err != nil {
 		cmd.Log.Fatal(err)
 	}
-
-	defer ln.Close()
 
 	for {
 	}

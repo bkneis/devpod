@@ -3,6 +3,12 @@
   "image": "ghcr.io/loft-sh/devpod:dev",
   "remoteUser": "devpod",
   "postCreateCommand": "bash ./.devcontainer/post_create.sh",
+  "runArgs": ["--device=/dev/net/tun"],
+  "features": {
+    "ghcr.io/tailscale/codespace/tailscale": {
+      "version": "latest"
+    }
+  },
   // Required for DinD
   "privileged": true
 }

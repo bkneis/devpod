@@ -237,7 +237,7 @@ func (cmd *SSHCmd) startTailscaleTunnel(
 	defer cancel()
 	errChan := make(chan error, 1)
 	go func() {
-		err := network.Start(startCtx)
+		err := network.Start(startCtx, nil)
 		if err != nil {
 			errChan <- fmt.Errorf("failed to start TSNet: %w", err)
 		}

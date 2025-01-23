@@ -46,7 +46,7 @@ func (cmd *NetworkDaemonCmd) Run(_ *cobra.Command, _ []string) error {
 			"8022": tailscale.ReverseProxyHandler("127.0.0.1:8022"),
 		},
 	})
-	if err := tsNet.Start(context.TODO()); err != nil {
+	if err := tsNet.Start(context.TODO(), nil); err != nil {
 		return fmt.Errorf("cannot start tsNet server: %w", err)
 	}
 

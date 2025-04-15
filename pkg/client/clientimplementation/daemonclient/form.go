@@ -2,6 +2,7 @@ package daemonclient
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -119,6 +120,10 @@ func createInstanceInteractive(ctx context.Context, baseClient platformclient.Cl
 			},
 		},
 	}
+
+	instanceB, _ := json.Marshal(instance)
+
+	log.Info("============ instance 2", string(instanceB))
 
 	return instance, nil
 }

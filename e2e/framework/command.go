@@ -249,7 +249,7 @@ func (f *Framework) DevPodWorkspaceStop(ctx context.Context, extraArgs ...string
 }
 
 func (f *Framework) DevPodWorkspaceDelete(ctx context.Context, workspace string, extraArgs ...string) error {
-	baseArgs := []string{"delete", workspace, "--ignore-not-found"}
+	baseArgs := []string{"delete", workspace, "--ignore-not-found", "--force"}
 	baseArgs = append(baseArgs, extraArgs...)
 
 	return f.ExecCommand(ctx, false, true, fmt.Sprintf("Successfully deleted workspace '%s'", workspace), baseArgs)
@@ -352,6 +352,59 @@ func (f *Framework) DevPodContextDelete(ctx context.Context, name string, extraA
 	err := f.ExecCommand(ctx, false, true, "", append(baseArgs, extraArgs...))
 	if err != nil {
 		return fmt.Errorf("devpod context delete failed: %s", err.Error())
+	}
+	return nil
+}
+
+func (f *Framework) DevPodProLogin(ctx context.Context, extraArgs ...string) error {
+	baseArgs := []string{"pro", "login", "--access-key", "O1Wr8t1QXVnGlVilChWOIyCFpE83CCz2tTHh6egoX75TQbPaI6M1IZE0xFv6GnSQ", "fgni94z.loft.host"}
+	err := f.ExecCommand(ctx, false, true, "", append(baseArgs, extraArgs...))
+	if err != nil {
+		return fmt.Errorf("devpod pro login failed: %s", err.Error())
+	}
+	return nil
+}
+
+func (f *Framework) DevPodProDelete(ctx context.Context, extraArgs ...string) error {
+	baseArgs := []string{"pro", "delete", "fgni94z.loft.host"}
+	err := f.ExecCommand(ctx, false, true, "", append(baseArgs, extraArgs...))
+	if err != nil {
+		return fmt.Errorf("devpod pro delete failed: %s", err.Error())
+	}
+	return nil
+}
+
+func (f *Framework) DevPodDaemonStart(ctx context.Context, extraArgs ...string) error {
+	baseArgs := []string{"pro", "daemon", "start", "--host=fgni94z.loft.host"}
+	err := f.ExecCommand(ctx, false, true, "", append(baseArgs, extraArgs...))
+	if err != nil {
+		return fmt.Errorf("devpod pro delete failed: %s", err.Error())
+	}
+	return nil
+}
+
+func (f *Framework) DevPodProUp(ctx context.Context, id, source, repo string, additionalArgs ...string) error {
+	upArgs := []string{"up", "--debug", "--ide", "none", "--id", id, repo}
+	upArgs = append(upArgs, additionalArgs...)
+
+	env := []string{fmt.Sprintf(`DEVPOD_UP_PRO_INSTANCE={"metadata":{"generateName":"%s-","namespace":"loft-p-default","creationTimestamp":null,"labels":{"loft.sh/project":"default","loft.sh/workspace-id":"%s"},"annotations":{"loft.sh/workspace-picture":"https://opengraph.githubassets.com/afa2b01f629ff66840f84e773cdb7f516b61273596445acca1c255087161240d/loft-sh/devpod-example-go","loft.sh/workspace-source":"%s:%s"}},"spec":{"displayName":"%s","templateRef":{"name":"test-kubernetes"},"target":{"cluster":{"name":"loft-cluster"}},"runnerRef":{}},"status":{"resolvedTarget":{}}}`, id, id, source, repo, id)}
+
+	_, _, err := f.ExecCommandCaptureWithEnv(ctx, upArgs, env)
+	if err != nil {
+		return fmt.Errorf("devpod up failed: %s", err.Error())
+	}
+	return nil
+}
+
+func (f *Framework) DevPodProUpWithIDE(ctx context.Context, id, source, repo string, additionalArgs ...string) error {
+	upArgs := []string{"up", "--debug", "--id", id, repo}
+	upArgs = append(upArgs, additionalArgs...)
+
+	env := []string{fmt.Sprintf(`DEVPOD_UP_PRO_INSTANCE={"metadata":{"generateName":"%s-","namespace":"loft-p-default","creationTimestamp":null,"labels":{"loft.sh/project":"default","loft.sh/workspace-id":"%s"},"annotations":{"loft.sh/workspace-picture":"https://opengraph.githubassets.com/afa2b01f629ff66840f84e773cdb7f516b61273596445acca1c255087161240d/loft-sh/devpod-example-go","loft.sh/workspace-source":"%s:%s"}},"spec":{"displayName":"%s","templateRef":{"name":"test-kubernetes"},"target":{"cluster":{"name":"loft-cluster"}},"runnerRef":{}},"status":{"resolvedTarget":{}}}`, id, id, source, repo, id)}
+
+	_, _, err := f.ExecCommandCaptureWithEnv(ctx, upArgs, env)
+	if err != nil {
+		return fmt.Errorf("devpod up failed: %s", err.Error())
 	}
 	return nil
 }
